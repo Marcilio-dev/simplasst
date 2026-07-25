@@ -1,0 +1,24 @@
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Logs e temporários
+*.log
+*.tmp
+*.swp
+*~
+
+# Node (caso queira adicionar ferramentas futuramente)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Vercel local
+.vercel/
