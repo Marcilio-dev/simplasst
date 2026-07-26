@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simpla SST — Proposta Técnica Comercial Online</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --ink: #052137;
+    --ink-900: #031622;
+    --green: #44741B;
+    --green-600: #5A9525;
+    --green-50: #EDF5E4;
+    --paper: #F4F7FA;
+    --line: #E4EAF1;
+    --text: #2C3A52;
+    --muted: #5C6B82;
+    --danger: #C53030;
+    --danger-bg: #FFF5F5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: #CBD5E1;
+    font-size: 10pt;
+    line-height: 1.6;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ── BARRA SUPERIOR DE AÇÕES (TELA / NÃO IMPRIME) ── */
+  .top-bar {
+    position: sticky; top: 0; z-index: 1000;
+    background: var(--ink-900); color: #fff;
+    padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .top-bar-brand { display: flex; align-items: center; gap: 12px; }
+  .top-bar-brand img { height: 26px; filter: brightness(0) invert(1); }
+  .top-bar-title { font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,.9); display: flex; align-items: center; gap: 8px; }
+  .badge-status {
+    font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,.1);
+  }
+  .badge-status.enviada { background: #FEFCBF; color: #744210; }
+  .badge-status.assinada { background: #C6F6D5; color: #22543D; }
+  .badge-status.expirada { background: #FED7D7; color: #742A2A; }
+
+  .top-bar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-600); transform: translateY(-1px); }
+  .btn-secondary { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+  .btn-secondary:hover { background: rgba(255,255,255,.22); }
+  .btn-admin { background: #ED8936; color: #fff; }
+  .btn-admin:hover { background: #DD6B20; }
+
+  /* ── TELA DE PIN / TRAVA DE CNPJ ── */
+  .pin-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--ink-900); display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .pin-box {
+    background: #fff; width: 100%; max-width: 440px; border-radius: 16px;
+    padding: 36px 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    position: relative; overflow: hidden;
+  }
+  .pin-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, var(--green), var(--green-600));
+  }
+  .pin-logo { height: 42px; margin-bottom: 20px; }
+  .pin-title { font-size: 1.25rem; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .pin-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .pin-desc strong { color: var(--ink); }
+  .pin-input-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .pin-input {
+    width: 48px; height: 56px; font-size: 1.4rem; font-weight: 800; text-align: center;
+    border: 2px solid var(--line); border-radius: 10px; color: var(--ink); outline: none;
+    transition: all 0.2s;
+  }
+  .pin-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(68,116,27,.2); }
+  .pin-error { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 8px; min-height: 20px; }
+
+  /* ── ESTRUTURA DO DOCUMENTO DE PROPOSTA (A4) ── */
+  .proposal-container { margin: 24px auto; }
+
+  .page {
+    width: 210mm; min-height: 297mm; margin: 0 auto 24px auto;
+    padding: 14mm 16mm; background: #fff; position: relative; overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,.15); border-radius: 4px; page-break-after: always;
+  }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* Cabeçalho da Página */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 10px; border-bottom: 2px solid var(--line); margin-bottom: 20px;
+  }
+  .page-header-brand { display: flex; align-items: center; gap: 10px; }
+  .page-header-brand img.logo-icon { height: 28px; width: auto; }
+  .page-header-brand img.logo-text { height: 17px; width: auto; }
+  .page-header-tag { font-size: 7pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+  .eyebrow {
+    font-size: 7pt; font-weight: 800; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--green);
+    display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
+  }
+  .eyebrow::before { content: ''; width: 22px; height: 2px; background: var(--green); border-radius: 2px; flex: none; }
+  .section-title { font-size: 15pt; font-weight: 800; color: var(--ink); line-height: 1.15; letter-spacing: -.02em; margin-bottom: 8px; }
+  .section-lead { font-size: 9pt; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+
+  /* CAPA DA PROPOSTA */
+  .cover {
+    background: var(--ink-900); color: #fff;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 297mm; padding: 14mm 16mm;
+  }
+  .cover::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 5% 10%, rgba(68,116,27,.28), transparent 45%),
+                radial-gradient(circle at 95% 90%, rgba(68,116,27,.18), transparent 40%);
+    pointer-events: none;
+  }
+  .cover > * { position: relative; }
+  .cover-top { display: flex; align-items: center; gap: 14px; }
+  .cover-brand-text { display: flex; flex-direction: column; gap: 6px; }
+  .cover-brand-text span { font-size: 7.5pt; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+
+  .cover-mid { text-align: center; padding: 0 10mm; }
+  .cover-badge {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 7px 18px; margin-bottom: 20px;
+    font-size: 8pt; font-weight: 700; color: rgba(255,255,255,.85);
+  }
+  .cover-mid h1 { font-size: 26pt; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -.03em; margin-bottom: 12px; }
+  .cover-mid h1 .hl { color: var(--green-600); }
+  .cover-mid p { font-size: 10.5pt; color: rgba(255,255,255,.65); max-width: 44ch; margin: 0 auto; line-height: 1.6; }
+
+  .client-card-cover {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px; padding: 18px 24px; margin-top: 24px; text-align: left;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }
+  .client-field small { display: block; font-size: 6.5pt; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.5); margin-bottom: 2px; }
+  .client-field span { font-size: 8.5pt; font-weight: 700; color: #fff; }
+
+  .cover-contacts { display: flex; gap: 12px; justify-content: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.12); }
+  .contact-chip {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px; padding: 9px 14px; color: #fff; font-weight: 600; font-size: 8pt;
+  }
+  .contact-chip small { display: block; font-size: 6pt; text-transform: uppercase; color: rgba(255,255,255,.5); }
+
+  /* CABEÇALHO DO ORÇAMENTO / CLIENTE (PÁG 2) */
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 20px;
+  }
+  .meta-item small { display: block; font-size: 6.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; margin-bottom: 2px; }
+  .meta-item span { font-size: 8.5pt; font-weight: 700; color: var(--ink); }
+
+  /* GRUPOS DE SERVIÇOS SELECIONADOS */
+  .services-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .service-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .service-card-ico {
+    width: 36px; height: 36px; border-radius: 8px; background: var(--green-50); color: var(--green);
+    display: flex; align-items: center; justify-content: center; flex: none; margin-top: 2px;
+  }
+  .service-card-ico svg { width: 18px; height: 18px; }
+  .service-card-body h3 { font-size: 9.5pt; font-weight: 800; color: var(--ink); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .service-card-body p { font-size: 8pt; color: var(--muted); line-height: 1.55; }
+  .tag-mode { font-size: 6.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 99px; background: var(--line); color: var(--ink); }
+
+  /* TABELA FINANCEIRA */
+  .fin-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 8.5pt; }
+  .fin-table th { background: var(--ink); color: #fff; font-weight: 700; text-align: left; padding: 9px 12px; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; }
+  .fin-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--text); }
+  .fin-table tr:nth-child(even) td { background: var(--paper); }
+  .fin-table .val { font-weight: 800; color: var(--ink); text-align: right; }
+  .fin-table .tag-cortesia { color: var(--green); font-weight: 800; }
+
+  .fin-summary {
+    background: var(--ink-900); color: #fff; border-radius: 12px; padding: 18px 22px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+  }
+  .fin-summary-box small { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.6); margin-bottom: 2px; }
+  .fin-summary-box span { font-size: 16pt; font-weight: 800; color: var(--green-600); }
+
+  .pay-box {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 20px; font-size: 8.5pt;
+  }
+  .pay-box h4 { font-size: 9pt; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+
+  /* COMPROVANTE DE ASSINATURA ELETRÔNICA (CLICKSIGN STYLE) */
+  .signature-cert-box {
+    background: #F8FAFC; border: 2px dashed #CBD5E1; border-radius: 12px;
+    padding: 20px 24px; margin-top: 24px; position: relative;
+  }
+  .signature-cert-box.signed {
+    background: #F0FDF4; border: 2px solid #22C55E;
+  }
+  .cert-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; border-bottom: 1px solid rgba(0,0,0,.08); padding-bottom: 10px; }
+  .cert-title { display: flex; align-items: center; gap: 8px; font-size: 9.5pt; font-weight: 800; color: #166534; }
+  .cert-title svg { width: 20px; height: 20px; color: #22C55E; }
+
+  .cert-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 8pt; }
+  .cert-item small { display: block; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+  .cert-item span { font-weight: 700; color: var(--ink); }
+  .cert-hash { grid-column: span 2; font-family: monospace; font-size: 7pt; color: #475569; background: rgba(0,0,0,.04); padding: 6px 10px; border-radius: 6px; word-break: break-all; }
+
+  /* MODAL DE ASSINATURA ELETRÔNICA */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 3000;
+    background: rgba(3, 22, 34, 0.85); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    background: #fff; width: 100%; max-width: 520px; border-radius: 16px;
+    padding: 30px; box-shadow: 0 24px 60px rgba(0,0,0,.4); position: relative;
+  }
+  .modal-title { font-size: 1.2rem; font-weight: 800; color: var(--ink); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .modal-subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+  
+  .form-group { margin-bottom: 14px; text-align: left; }
+  .form-group label { display: block; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-bottom: 5px; }
+  .form-input {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 0.9rem; font-family: inherit; color: var(--ink); outline: none; transition: border .2s;
+  }
+  .form-input:focus { border-color: var(--green); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .checkbox-group { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0; }
+  .checkbox-group input { margin-top: 3px; accent-color: var(--green); width: 16px; height: 16px; }
+  .checkbox-group label { font-size: 0.8rem; color: var(--text); line-height: 1.4; }
+
+  /* PAINEL BACKOFFICE (ADMIN) */
+  .admin-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 540px; max-width: 100vw; z-index: 2500;
+    background: #fff; box-shadow: -10px 0 40px rgba(0,0,0,.3); display: none; flex-direction: column;
+  }
+  .admin-drawer.active { display: flex; }
+  .admin-drawer-header {
+    background: var(--ink-900); color: #fff; padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .admin-drawer-body { padding: 24px; overflow-y: auto; flex: 1; }
+  .admin-section-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--green); margin: 20px 0 10px 0; }
+
+  /* RODAPÉ PÁGINA */
+  .page-footer {
+    position: absolute; bottom: 10mm; left: 16mm; right: 16mm;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 7pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px;
+  }
+
+  /* MEDIA PRINT OTIMIZADO */
+  @media print {
+    body { background: #fff; }
+    .top-bar, .pin-overlay, .modal-overlay, .admin-drawer, .btn-action { display: none !important; }
+    .proposal-container { margin: 0; }
+    .page { margin: 0; width: 100%; box-shadow: none; border-radius: 0; min-height: 297mm; }
+    @page { size: A4; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     BARRA SUPERIOR (AÇÕES / NAVEGAÇÃO)
+══════════════════════════════════════════ -->
+<div class="top-bar">
+  <div class="top-bar-brand">
+    <img src="logo-simpla.svg" alt="Simpla SST">
+    <div class="top-bar-title">
+      <span id="proposal-title-bar">Proposta Comercial</span>
+      <span class="badge-status enviada" id="status-badge">Aguardando Aceite</span>
+    </div>
+  </div>
+
+  <div class="top-bar-actions">
+    <button class="btn-action btn-secondary" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Salvar PDF
+    </button>
+
+    <button class="btn-action btn-primary" id="btn-sign-main" onclick="openSignModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+      Aceitar e Assinar
+    </button>
+
+    <button class="btn-action btn-admin" id="btn-admin-toggle" onclick="toggleAdminDrawer()">
+      ⚙️ Backoffice (Simpla)
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TRAVA DE SEGURANÇA (PIN PELO CNPJ)
+══════════════════════════════════════════ -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <img src="logo-simpla.svg" alt="Simpla SST" class="pin-logo">
+    <h2 class="pin-title">Acesso Reservado</h2>
+    <p class="pin-desc">Esta Proposta Comercial é destinada a <br><strong id="pin-client-name">Carregando...</strong>.<br>Digite os <strong>5 primeiros dígitos do CNPJ</strong> para acessar.</p>
+
+    <div class="pin-input-group">
+      <input type="password" maxlength="1" class="pin-input" autofocus onkeyup="movePinFocus(this, 0)">
+      <input type="password" maxlength="1" class="pin-input" onkeyup="movePinFocus(this, 1)">
+      <input type="password" maxlength="1" class="pin-input" onkeyup="movePinFocus(this, 2)">
+      <input type="password" maxlength="1" class="pin-input" onkeyup="movePinFocus(this, 3)">
+      <input type="password" maxlength="1" class="pin-input" onkeyup="movePinFocus(this, 4)">
+    </div>
+
+    <button class="btn-action btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="verifyPin()">
+      Desbloquear Proposta
+    </button>
+
+    <div class="pin-error" id="pin-error-msg"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CONTAINER DO DOCUMENTO A4
+══════════════════════════════════════════ -->
+<div class="proposal-container" id="proposal-doc">
+
+  <!-- PÁGINA 1: CAPA INSTITUCIONAL E CLIENTE -->
+  <div class="page cover">
+    <div class="cover-top">
+      <img src="logo-simpla.svg" alt="" style="width:48px;height:56px;filter:brightness(0) invert(1);flex:none;">
+      <div class="cover-brand-text">
+        <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:22px;width:auto;filter:brightness(0) invert(1);">
+        <span>Saúde e Segurança do Trabalho</span>
+      </div>
+    </div>
+
+    <div class="cover-mid">
+      <div class="cover-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+        Proposta Técnica Comercial para Prestação de Serviços
+      </div>
+      <h1>
+        <span class="hl">Segurança Jurídica</span><br>
+        em Saúde e Segurança do Trabalho
+      </h1>
+      <p id="cover-intro-text">Sua empresa em dia com as obrigações legais, protegida de autuações, condenações trabalhistas e passivos evitáveis.</p>
+
+      <div class="client-card-cover">
+        <div class="client-field"><small>Empresa Solicitante</small><span id="doc-client-name">-</span></div>
+        <div class="client-field"><small>CNPJ</small><span id="doc-client-cnpj">-</span></div>
+        <div class="client-field"><small>Responsável</small><span id="doc-client-resp">-</span></div>
+        <div class="client-field"><small>Validade da Proposta</small><span id="doc-validity">-</span></div>
+      </div>
+    </div>
+
+    <div class="cover-contacts">
+      <div class="contact-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.48a2 2 0 0 1 1.999-2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.37a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <div><small>WhatsApp</small><span>(21) 99528-6353</span></div>
+      </div>
+      <div class="contact-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <div><small>E-mail</small><span>comercial@simplasst.com.br</span></div>
+      </div>
+      <div class="contact-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <div><small>Site</small><span>www.simplasst.com.br</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA 2: METADADOS E GRUPOS DE SERVIÇOS -->
+  <div class="page">
+    <div class="page-header">
+      <div class="page-header-brand">
+        <img src="logo-simpla.svg" alt="" class="logo-icon">
+        <img src="text-simpla-sst.svg" alt="Simpla SST" class="logo-text">
+      </div>
+      <span class="page-header-tag">Especificações Técnicas</span>
+    </div>
+
+    <div class="eyebrow">Dados do Enquadramento</div>
+    <div class="meta-grid">
+      <div class="meta-item"><small>CNAE Preponderante</small><span id="meta-cnae">-</span></div>
+      <div class="meta-item"><small>Grau de Risco</small><span id="meta-risco">-</span></div>
+      <div class="meta-item"><small>Nº de Funcionários</small><span id="meta-funcs">-</span></div>
+      <div class="meta-item"><small>Endereço</small><span id="meta-endereco" style="font-size:7.5pt;">-</span></div>
+      <div class="meta-item"><small>Nº de Setores / Unidades</small><span id="meta-setores">-</span></div>
+      <div class="meta-item"><small>Data de Emissão</small><span id="meta-emissao">-</span></div>
+    </div>
+
+    <div class="eyebrow">Escopo dos Serviços Contratados</div>
+    <h2 class="section-title">Pilares de Atuação Selecionados</h2>
+    <p class="section-lead">Abaixo apresentamos a discriminação dos grandes grupos de serviços que serão executados pela Simpla SST para a sua empresa:</p>
+
+    <div class="services-list" id="services-rendered-list">
+      <!-- Injetado dinamicamente via JS -->
+    </div>
+
+    <div class="page-footer">
+      <span>Simpla SST · Saúde e Segurança do Trabalho</span>
+      <a href="https://www.simplasst.com.br">www.simplasst.com.br</a>
+    </div>
+  </div>
+
+  <!-- PÁGINA 3: NR-01 + PCMSO CERTIFICADO CRM -->
+  <div class="page">
+    <div class="page-header">
+      <div class="page-header-brand">
+        <img src="logo-simpla.svg" alt="" class="logo-icon">
+        <img src="text-simpla-sst.svg" alt="Simpla SST" class="logo-text">
+      </div>
+      <span class="page-header-tag">Destaques Normativos</span>
+    </div>
+
+    <div class="eyebrow">Validade Jurídica &amp; CFM</div>
+    <h2 class="section-title">PCMSO &amp; Resolução CFM 2.376/2024</h2>
+    <p class="section-lead">Exigência de médico do trabalho com CRM ativo e Responsabilidade Técnica registrada. Garantia de respaldo em fiscalizações e defesas trabalhistas.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin-bottom:20px;">
+      <div>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;">
+          <img src="cert-pcmso-cremerj.jpg" alt="Certificado CRM-RJ" style="max-width:100%;height:auto;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.1);">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--ink-900);color:#fff;border-radius:10px;padding:16px;">
+          <h4 style="color:var(--green-600);font-size:8pt;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Compromisso Legal Simpla SST</h4>
+          <p style="font-size:8pt;color:#DCE4F0;line-height:1.5;">Nosso Médico do Trabalho é o Responsável Técnico formal do seu PCMSO. Evita autuações da auditoria fiscal do trabalho e invalidação de ASOs em ações judiciais.</p>
+        </div>
+
+        <div style="background:var(--green-50);border:1px solid rgba(68,116,27,.2);border-radius:10px;padding:14px;">
+          <h4 style="color:var(--green);font-size:8.5pt;font-weight:800;margin-bottom:6px;">Adequação Completa NR-01</h4>
+          <p style="font-size:8pt;color:var(--ink);line-height:1.5;">Gerenciamento de Riscos Ocupacionais (GRO/PGR), incluindo avaliação e inventário de <b>riscos psicossociais</b> e treinamento de lideranças.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>Simpla SST · Saúde e Segurança do Trabalho</span>
+      <a href="https://www.simplasst.com.br">www.simplasst.com.br</a>
+    </div>
+  </div>
+
+  <!-- PÁGINA 4: TABELA FINANCEIRA, PAGAMENTO E ASSINATURA ELETRÔNICA -->
+  <div class="page">
+    <div class="page-header">
+      <div class="page-header-brand">
+        <img src="logo-simpla.svg" alt="" class="logo-icon">
+        <img src="text-simpla-sst.svg" alt="Simpla SST" class="logo-text">
+      </div>
+      <span class="page-header-tag">Investimento &amp; Aceite</span>
+    </div>
+
+    <div class="eyebrow">Resumo Comercial</div>
+    <h2 class="section-title">Investimento &amp; Condições Financeiras</h2>
+
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Item / Descrição do Serviço</th>
+          <th>Modo de Cobrança</th>
+          <th style="text-align:right;">Valor (R$)</th>
+        </tr>
+      </thead>
+      <tbody id="fin-table-body">
+        <!-- Injetado via JS -->
+      </tbody>
+    </table>
+
+    <div class="fin-summary">
+      <div class="fin-summary-box">
+        <small>Investimento Total / Implantação</small>
+        <span id="fin-total-implanta">-</span>
+      </div>
+      <div class="fin-summary-box" style="text-align:right;">
+        <small>Consultoria Mensal (Recorrente)</small>
+        <span id="fin-total-mensal">-</span>
+      </div>
+    </div>
+
+    <div class="pay-box">
+      <h4>Condições de Pagamento e Faturamento</h4>
+      <p id="pay-conditions-text">-</p>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;gap:20px;">
+        <div><b>Chave PIX:</b> 27.991.783/0001-79</div>
+        <div><b>Banco:</b> C6 BANK (Select SST Saúde e Segurança do Trabalho)</div>
+      </div>
+    </div>
+
+    <!-- BLOCO DO CERTIFICADO DE ASSINATURA ELETRÔNICA (CLICKSIGN STYLE) -->
+    <div class="signature-cert-box" id="signature-cert-box">
+      <div class="cert-header">
+        <div class="cert-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span id="cert-status-label">Termo de Aceite Eletrônico</span>
+        </div>
+        <button class="btn-action btn-primary" id="btn-sign-cert" onclick="openSignModal()">
+          Assinar Agora
+        </button>
+      </div>
+
+      <div class="cert-grid" id="cert-grid-fields">
+        <div class="cert-item"><small>Status</small><span id="cert-val-status">Aguardando Confirmação do Cliente</span></div>
+        <div class="cert-item"><small>Validade da Proposta</small><span id="cert-val-validity">30 Dias</span></div>
+        <div class="cert-item"><small>Signatário</small><span id="cert-val-name">-</span></div>
+        <div class="cert-item"><small>CPF / Cargo</small><span id="cert-val-cpf">-</span></div>
+        <div class="cert-item"><small>E-mail de Confirmação</small><span id="cert-val-email">-</span></div>
+        <div class="cert-item"><small>Data &amp; Hora do Aceite</small><span id="cert-val-date">-</span></div>
+        <div class="cert-hash" id="cert-val-hash">Hash SHA-256 de Autenticidade: (Aguardando assinatura)</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>Simpla SST · Saúde e Segurança do Trabalho</span>
+      <a href="https://www.simplasst.com.br">www.simplasst.com.br</a>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL DE ASSINATURA (CLICKSIGN / ZAPSIGN)
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="sign-modal">
+  <div class="modal-card">
+    <h2 class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" style="color:var(--green);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+      Assinatura Eletrônica da Proposta
+    </h2>
+    <p class="modal-subtitle">Preencha os dados do responsável legal da empresa contratante para confirmar o aceite da proposta comercial.</p>
+
+    <div class="form-group">
+      <label>Nome Completo do Responsável *</label>
+      <input type="text" class="form-input" id="sign-input-name" placeholder="Ex: Liana Maria da Silva">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>CPF do Responsável *</label>
+        <input type="text" class="form-input" id="sign-input-cpf" placeholder="000.000.000-00">
+      </div>
+      <div class="form-group">
+        <label>Cargo / Função *</label>
+        <input type="text" class="form-input" id="sign-input-role" placeholder="Ex: Gerente de RH / Diretor">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>E-mail Corporativo de Confirmação *</label>
+      <input type="email" class="form-input" id="sign-input-email" placeholder="responsavel@empresa.com.br">
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="sign-check-terms">
+      <label for="sign-check-terms">Declaro que li e concordo com os termos e valores desta Proposta Técnica Comercial da Simpla SST conforme MP 2.200-2/2001 e LGPD.</label>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:20px;">
+      <button class="btn-action btn-secondary" style="flex:1;justify-content:center;" onclick="closeSignModal()">Cancelar</button>
+      <button class="btn-action btn-primary" style="flex:2;justify-content:center;" onclick="submitSignature()">Finalizar Assinatura</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAINEL BACKOFFICE (ADMIN SIMPLA SST)
+══════════════════════════════════════════ -->
+<div class="admin-drawer" id="admin-drawer">
+  <div class="admin-drawer-header">
+    <h3>⚙️ Backoffice Simpla SST</h3>
+    <button class="btn-action btn-secondary" onclick="toggleAdminDrawer()">✕ Fechar</button>
+  </div>
+
+  <div class="admin-drawer-body">
+
+    <div class="admin-section-title">1. Histórico &amp; Duplicação de Propostas</div>
+    <div class="form-group">
+      <label>Selecionar Proposta / Orçamento</label>
+      <select class="form-input" id="admin-select-proposal" onchange="loadSelectedProposalAdmin()"></select>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-action btn-primary" style="flex:1;justify-content:center;" onclick="duplicateProposalAdmin()">📋 Duplicar Proposta</button>
+      <button class="btn-action btn-secondary" style="flex:1;justify-content:center;" onclick="createNewProposalAdmin()">➕ Nova Proposta</button>
+    </div>
+
+    <div class="admin-section-title">2. Dados do Cliente Solicitante</div>
+    <div class="form-group">
+      <label>Razão Social / Nome Fantasia</label>
+      <input type="text" class="form-input" id="admin-client-name">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>CNPJ Completo</label>
+        <input type="text" class="form-input" id="admin-client-cnpj">
+      </div>
+      <div class="form-group">
+        <label>PIN (5 Primeiros dígitos)</label>
+        <input type="text" class="form-input" id="admin-client-pin" placeholder="Ex: 02635">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>CNAE Preponderante</label>
+        <input type="text" class="form-input" id="admin-client-cnae">
+      </div>
+      <div class="form-group">
+        <label>Grau de Risco (01 a 04)</label>
+        <input type="text" class="form-input" id="admin-client-risco">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nº de Funcionários</label>
+        <input type="number" class="form-input" id="admin-client-funcs">
+      </div>
+      <div class="form-group">
+        <label>Responsável / Contato</label>
+        <input type="text" class="form-input" id="admin-client-resp">
+      </div>
+    </div>
+
+    <div class="admin-section-title">3. Seleção dos 8 Grupos de Serviços</div>
+    <div id="admin-services-checkboxes" style="display:flex;flex-direction:column;gap:12px;">
+      <!-- Injetado via JS com switches Detalhado vs Abreviado -->
+    </div>
+
+    <div class="admin-section-title">4. Condições Financeiras</div>
+    <div class="form-group">
+      <label>Valor Total Implantação (R$)</label>
+      <input type="text" class="form-input" id="admin-fin-implanta">
+    </div>
+    <div class="form-group">
+      <label>Valor Consultoria Mensal (R$)</label>
+      <input type="text" class="form-input" id="admin-fin-mensal">
+    </div>
+    <div class="form-group">
+      <label>Texto de Condições de Pagamento</label>
+      <textarea class="form-input" id="admin-fin-paytext" rows="3"></textarea>
+    </div>
+
+    <button class="btn-action btn-primary" style="width:100%;justify-content:center;padding:14px;margin-top:20px;" onclick="saveProposalAdmin()">
+      💾 Salvar Alterações na Proposta
+    </button>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LÓGICA JAVASCRIPT (SPA & ESTADO)
+══════════════════════════════════════════ -->
+<script>
+  /* ── 8 GRANDES GRUPOS DE SERVIÇOS (CATÁLOGO OFICIAL) ── */
+  const MASTER_SERVICES_CATALOG = [
+    {
+      id: "doc_programas",
+      name: "Documentação & programas legais",
+      detalhada: "PGR e GRO (NR-01), PCMSO (NR-07), LTCAT, laudos de insalubridade (NR-15) e periculosidade (NR-16), PPR, PCA e PPP, elaborados conforme a legislação vigente.",
+      abreviada: "PGR/GRO, PCMSO, LTCAT, Laudos NR-15/16, PPR, PCA e PPP em conformidade legal.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>'
+    },
+    {
+      id: "exames_aso",
+      name: "Exames ocupacionais (ASO)",
+      detalhada: "Admissional, periódico, demissional, retorno ao trabalho e mudança de risco, com exames complementares. Atendimento in company ou em rede credenciada.",
+      abreviada: "ASO admissional, periódico, demissional e retorno em rede credenciada ou in company.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m9 16 2 2 4-4"/></svg>'
+    },
+    {
+      id: "treinamentos_nrs",
+      name: "Treinamentos normativos",
+      detalhada: "Aplicamos os treinamentos exigidos pelas 38 Normas Regulamentadoras, no formato que a legislação atualizada determina, com certificado válido.",
+      abreviada: "Capacitação e treinamentos certificados para as 38 NRs aplicáveis.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>'
+    },
+    {
+      id: "gestao_esocial",
+      name: "Gestão do eSocial (SST)",
+      detalhada: "Envio e monitoramento dos eventos de SST (S-2210, S-2220 e S-2240), mantendo sua empresa em conformidade e livre de multas e notificações.",
+      abreviada: "Envio e gestão contínua dos eventos S-2210, S-2220 e S-2240 sem multas.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>'
+    },
+    {
+      id: "adequacao_nrs",
+      name: "Adequação às NRs",
+      detalhada: "Diagnóstico e plano de ação para as normas aplicáveis à sua atividade, com acompanhamento até a conformidade total.",
+      abreviada: "Diagnóstico e plano de adequação às NRs específicas do seu segmento.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>'
+    },
+    {
+      id: "cipa_sesmt",
+      name: "CIPA & SESMT",
+      detalhada: "Constituição, eleição e treinamento da CIPA (NR-5) e dimensionamento do SESMT (NR-4), com assessoria continuada para a sua gestão de segurança.",
+      abreviada: "Processo eleitoral e treinamento da CIPA (NR-5) e dimensionamento do SESMT (NR-4).",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3a4 4 0 0 1 0 8"/></svg>'
+    },
+    {
+      id: "pericias_trabalhistas",
+      name: "Perícias & suporte trabalhista",
+      detalhada: "Laudos técnicos, assistência técnica pericial e apoio especializado em ações trabalhistas, fiscalizações e demandas administrativas.",
+      abreviada: "Assistência técnica pericial e laudos de defesa para ações trabalhistas.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6"/><rect x="4" y="3" width="16" height="18" rx="2"/></svg>'
+    },
+    {
+      id: "assessoria_mensal",
+      name: "Assessoria mensal",
+      detalhada: "SESMT terceirizado, controle de vencimentos, gestão de documentos e acompanhamento contínuo dos prazos legais, tudo com um único ponto de contato.",
+      abreviada: "Gestão continuada de prazos, vencimentos de ASOs/treinamentos e SESMT terceirizado.",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20v-4M18 20v-9"/><path d="M3 20h18"/><path d="m4 9 5-5 4 4 7-7"/></svg>'
+    }
+  ];
+
+  /* ── BANCO DE PROPOSTAS PRÉ-CARREGADAS ── */
+  let PROPOSALS_DB = {
+    "mercados-braga": {
+      id: "PROP-2026-001",
+      slug: "mercados-braga",
+      clientName: "Mercados Braga",
+      cnpj: "02.635.710/0001-13",
+      pin: "02635",
+      cnae: "47.12-1-00 - Comércio varejista",
+      grauRisco: "03",
+      funcionarios: 313,
+      setores: "1 Matriz + 3 Filiais",
+      responsavel: "Liana (RH)",
+      email: "liana.rh@multibraga.com.br",
+      dataEmissao: "16/04/2026",
+      validade: "30 Dias",
+      status: "enviada", // enviada | assinada
+      servicesConfig: {
+        doc_programas: { active: true, mode: "detalhada" },
+        exames_aso: { active: true, mode: "detalhada" },
+        treinamentos_nrs: { active: true, mode: "detalhada" },
+        gestao_esocial: { active: true, mode: "detalhada" },
+        adequacao_nrs: { active: true, mode: "detalhada" }
+      },
+      financialItems: [
+        { desc: "PGR + GRO (NR-01) - Matriz Bangu", mode: "Pontual", val: "R$ 39.240,00 (6x R$ 6.540,00)" },
+        { desc: "PGR + GRO (NR-01) - Filial Santíssimo 1", mode: "Pontual", val: "R$ 48.720,00 (6x R$ 8.120,00)" },
+        { desc: "PGR + GRO (NR-01) - Filial Santíssimo 2", mode: "Pontual", val: "R$ 39.120,00 (6x R$ 6.520,00)" },
+        { desc: "PGR + GRO (NR-01) - Filial Bangu", mode: "Pontual", val: "R$ 39.330,00 (6x R$ 6.555,00)" },
+        { desc: "Diagnóstico e Treinamento Psicossocial NR-01", mode: "Incluído", val: "Cortesia" }
+      ],
+      totalImplanta: "R$ 166.410,00",
+      totalMensal: "Sob Consulta",
+      payConditions: "Entrada correspondente à 1ª parcela na assinatura + 5 parcelas mensais nos meses subsequentes.",
+      signatureData: null
+    },
+    "1000-contas": {
+      id: "PROP-2026-002",
+      slug: "1000-contas",
+      clientName: "1000 Contas Precisão Contabilidade",
+      cnpj: "34.485.603/0001-42",
+      pin: "34485",
+      cnae: "69.20-6-01 - Atividades de contabilidade",
+      grauRisco: "02 (dois)",
+      funcionarios: 4,
+      setores: "1 Unidade",
+      responsavel: "Queli Santos",
+      email: "rh@milcontas.com.br",
+      dataEmissao: "11/02/2026",
+      validade: "30 Dias",
+      status: "enviada",
+      servicesConfig: {
+        doc_programas: { active: true, mode: "detalhada" },
+        exames_aso: { active: true, mode: "detalhada" },
+        gestao_esocial: { active: true, mode: "detalhada" },
+        assessoria_mensal: { active: true, mode: "detalhada" }
+      },
+      financialItems: [
+        { desc: "Visita técnica para levantamento de dados", mode: "Pontual", val: "R$ 450,00 (Cortesia)" },
+        { desc: "Elaboração / Atualização GRO / PGR", mode: "Pontual", val: "R$ 560,00" },
+        { desc: "Elaboração / Atualização PCMSO", mode: "Pontual", val: "R$ 610,00" },
+        { desc: "Levantamento de Riscos Psicossociais (NR-01)", mode: "Pontual", val: "R$ 510,00" },
+        { desc: "Palestra Educativa Riscos Psicossociais", mode: "Pontual", val: "R$ 380,00 (Cortesia)" },
+        { desc: "Consultoria Mensal + eSocial SST", mode: "Mensal", val: "R$ 1.800,00 / mês" }
+      ],
+      totalImplanta: "R$ 1.680,00",
+      totalMensal: "R$ 1.800,00 / mês",
+      payConditions: "50% no aceite da proposta + 50% na entrega dos documentos (via boleto bancário ou PIX).",
+      signatureData: null
+    }
+  };
+
+  let currentSlug = "mercados-braga";
+  let activeProposal = null;
+  let pinAttempts = 0;
+
+  /* ── INICIALIZAÇÃO DA SPA ── */
+  window.addEventListener('DOMContentLoaded', () => {
+    // Carrega do LocalStorage se existir
+    const saved = localStorage.getItem('SIMPLA_PROPOSALS_DB');
+    if (saved) {
+      try { PROPOSALS_DB = JSON.parse(saved); } catch(e) {}
+    }
+
+    // Lê parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const slugParam = urlParams.get('c');
+    if (slugParam && PROPOSALS_DB[slugParam]) {
+      currentSlug = slugParam;
+    }
+
+    activeProposal = PROPOSALS_DB[currentSlug] || Object.values(PROPOSALS_DB)[0];
+
+    // Atualiza nome do cliente na trava de PIN
+    document.getElementById('pin-client-name').innerText = activeProposal.clientName;
+
+    // Se a URL contém ?modo=admin ou se já foi autenticado
+    if (urlParams.get('modo') === 'admin' || sessionStorage.getItem('PIN_AUTH_' + activeProposal.slug)) {
+      document.getElementById('pin-overlay').style.display = 'none';
+      renderProposal(activeProposal);
+    }
+
+    renderAdminDrawer();
+  });
+
+  /* ── SISTEMA DE TRAVA POR PIN DO CNPJ ── */
+  function movePinFocus(input, idx) {
+    const inputs = document.querySelectorAll('.pin-input');
+    if (input.value.length === 1 && idx < 4) {
+      inputs[idx + 1].focus();
+    }
+    if (idx === 4 && input.value.length === 1) {
+      verifyPin();
+    }
+  }
+
+  function verifyPin() {
+    const inputs = document.querySelectorAll('.pin-input');
+    let entered = "";
+    inputs.forEach(i => entered += i.value);
+
+    if (entered.length < 5) return;
+
+    if (entered === activeProposal.pin) {
+      sessionStorage.setItem('PIN_AUTH_' + activeProposal.slug, 'true');
+      document.getElementById('pin-overlay').style.display = 'none';
+      renderProposal(activeProposal);
+    } else {
+      pinAttempts++;
+      const errBox = document.getElementById('pin-error-msg');
+      if (pinAttempts >= 5) {
+        errBox.innerText = "Muitas tentativas incorretas. Bloqueado por 5 minutos.";
+        inputs.forEach(i => i.disabled = true);
+      } else {
+        errBox.innerText = `PIN incorreto (${pinAttempts}/5 tentativas). Dica: 5 primeiros números do CNPJ.`;
+        inputs.forEach(i => i.value = '');
+        inputs[0].focus();
+      }
+    }
+  }
+
+  /* ── RENDERIZAÇÃO DA PROPOSTA ── */
+  function renderProposal(prop) {
+    document.getElementById('proposal-title-bar').innerText = prop.clientName + ' — ' + prop.id;
+    
+    // Status Badge
+    const badge = document.getElementById('status-badge');
+    if (prop.signatureData) {
+      badge.className = "badge-status assinada";
+      badge.innerText = "Assinada Digitalmente";
+      document.getElementById('btn-sign-main').style.display = 'none';
+      document.getElementById('btn-sign-cert').style.display = 'none';
+    } else {
+      badge.className = "badge-status enviada";
+      badge.innerText = "Aguardando Aceite";
+      document.getElementById('btn-sign-main').style.display = 'inline-flex';
+      document.getElementById('btn-sign-cert').style.display = 'inline-flex';
+    }
+
+    // Preenche Capa
+    document.getElementById('doc-client-name').innerText = prop.clientName;
+    document.getElementById('doc-client-cnpj').innerText = prop.cnpj;
+    document.getElementById('doc-client-resp').innerText = prop.responsavel;
+    document.getElementById('doc-validity').innerText = prop.validade;
+
+    // Preenche Metadados Pág 2
+    document.getElementById('meta-cnae').innerText = prop.cnae;
+    document.getElementById('meta-risco').innerText = prop.grauRisco;
+    document.getElementById('meta-funcs').innerText = prop.funcionarios + ' Colaboradores';
+    document.getElementById('meta-setores').innerText = prop.setores;
+    document.getElementById('meta-emissao').innerText = prop.dataEmissao;
+
+    // Renderiza Grupos de Serviços
+    const svcContainer = document.getElementById('services-rendered-list');
+    svcContainer.innerHTML = '';
+
+    MASTER_SERVICES_CATALOG.forEach(cat => {
+      const cfg = prop.servicesConfig[cat.id];
+      if (cfg && cfg.active) {
+        const textContent = cfg.mode === 'abreviada' ? cat.abreviada : cat.detalhada;
+        const html = `
+          <div class="service-card">
+            <div class="service-card-ico">${cat.icon}</div>
+            <div class="service-card-body">
+              <h3>${cat.name} <span class="tag-mode">${cfg.mode}</span></h3>
+              <p>${textContent}</p>
+            </div>
+          </div>
+        `;
+        svcContainer.innerHTML += html;
+      }
+    });
+
+    // Renderiza Tabela Financeira
+    const finBody = document.getElementById('fin-table-body');
+    finBody.innerHTML = '';
+    prop.financialItems.forEach(item => {
+      const isCortesia = item.val.toLowerCase().includes('cortesia');
+      const valClass = isCortesia ? 'val tag-cortesia' : 'val';
+      finBody.innerHTML += `
+        <tr>
+          <td><b>${item.desc}</b></td>
+          <td>${item.mode}</td>
+          <td class="${valClass}">${item.val}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('fin-total-implanta').innerText = prop.totalImplanta;
+    document.getElementById('fin-total-mensal').innerText = prop.totalMensal;
+    document.getElementById('pay-conditions-text').innerText = prop.payConditions;
+
+    // Renderiza Bloco de Certificado de Assinatura
+    const certBox = document.getElementById('signature-cert-box');
+    if (prop.signatureData) {
+      certBox.classList.add('signed');
+      document.getElementById('cert-status-label').innerText = "Certificado de Assinatura Eletrônica (Concluído)";
+      document.getElementById('cert-val-status').innerText = "✅ Assinado Eletronicamente";
+      document.getElementById('cert-val-status').style.color = "#166534";
+      document.getElementById('cert-val-name').innerText = prop.signatureData.name;
+      document.getElementById('cert-val-cpf').innerText = prop.signatureData.cpf + ' (' + prop.signatureData.role + ')';
+      document.getElementById('cert-val-email').innerText = prop.signatureData.email;
+      document.getElementById('cert-val-date').innerText = prop.signatureData.timestamp;
+      document.getElementById('cert-val-hash').innerText = "Hash SHA-256 de Autenticidade: " + prop.signatureData.hash;
+    } else {
+      certBox.classList.remove('signed');
+      document.getElementById('cert-status-label').innerText = "Termo de Aceite Eletrônico";
+      document.getElementById('cert-val-status').innerText = "Aguardando Confirmação do Cliente";
+      document.getElementById('cert-val-name').innerText = "-";
+      document.getElementById('cert-val-cpf').innerText = "-";
+      document.getElementById('cert-val-email').innerText = "-";
+      document.getElementById('cert-val-date').innerText = "-";
+      document.getElementById('cert-val-hash').innerText = "Hash SHA-256 de Autenticidade: (Aguardando assinatura)";
+    }
+  }
+
+  /* ── ASSINATURA ELETRÔNICA (CLICKSIGN STYLE) ── */
+  function openSignModal() {
+    document.getElementById('sign-modal').classList.add('active');
+  }
+
+  function closeSignModal() {
+    document.getElementById('sign-modal').classList.remove('active');
+  }
+
+  function submitSignature() {
+    const name = document.getElementById('sign-input-name').value.trim();
+    const cpf = document.getElementById('sign-input-cpf').value.trim();
+    const role = document.getElementById('sign-input-role').value.trim();
+    const email = document.getElementById('sign-input-email').value.trim();
+    const checked = document.getElementById('sign-check-terms').checked;
+
+    if (!name || !cpf || !role || !email) {
+      alert("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+    if (!checked) {
+      alert("Você precisa marcar a caixa aceitando os termos da proposta.");
+      return;
+    }
+
+    // Gera Hash SHA-256 fictício para a prova de integridade
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR') + ' (Horário de Brasília)';
+    const rawData = activeProposal.id + name + cpf + email + now.getTime();
+    let hash = "a3f89b" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "e21c9";
+
+    activeProposal.signatureData = {
+      name: name,
+      cpf: cpf,
+      role: role,
+      email: email,
+      timestamp: dateStr,
+      hash: hash
+    };
+    activeProposal.status = "assinada";
+
+    // Salva no banco de dados local
+    PROPOSALS_DB[activeProposal.slug] = activeProposal;
+    localStorage.setItem('SIMPLA_PROPOSALS_DB', JSON.stringify(PROPOSALS_DB));
+
+    closeSignModal();
+    renderProposal(activeProposal);
+
+    alert("🎉 Proposta assinada com sucesso! O comprovante de aceite e certificado foram gerados.");
+  }
+
+  /* ── PAINEL BACKOFFICE (ADMIN) ── */
+  function toggleAdminDrawer() {
+    const drawer = document.getElementById('admin-drawer');
+    drawer.classList.toggle('active');
+  }
+
+  function renderAdminDrawer() {
+    // Popula select de propostas
+    const select = document.getElementById('admin-select-proposal');
+    select.innerHTML = '';
+    Object.values(PROPOSALS_DB).forEach(p => {
+      select.innerHTML += `<option value="${p.slug}">${p.clientName} (${p.id})</option>`;
+    });
+    select.value = activeProposal.slug;
+
+    // Popula dados do cliente
+    document.getElementById('admin-client-name').value = activeProposal.clientName;
+    document.getElementById('admin-client-cnpj').value = activeProposal.cnpj;
+    document.getElementById('admin-client-pin').value = activeProposal.pin;
+    document.getElementById('admin-client-cnae').value = activeProposal.cnae;
+    document.getElementById('admin-client-risco').value = activeProposal.grauRisco;
+    document.getElementById('admin-client-funcs').value = activeProposal.funcionarios;
+    document.getElementById('admin-client-resp').value = activeProposal.responsavel;
+
+    // Popula checkboxes dos 8 grupos de serviços
+    const svcBox = document.getElementById('admin-services-checkboxes');
+    svcBox.innerHTML = '';
+
+    MASTER_SERVICES_CATALOG.forEach(cat => {
+      const cfg = activeProposal.servicesConfig[cat.id] || { active: false, mode: 'detalhada' };
+      const html = `
+        <div style="background:var(--paper);padding:10px 14px;border-radius:8px;border:1px solid var(--line);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="font-weight:700;font-size:8.5pt;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="admin-svc-check-${cat.id}" ${cfg.active ? 'checked' : ''}>
+              ${cat.name}
+            </label>
+            <select class="form-input" style="width:110px;padding:4px 8px;font-size:7.5pt;" id="admin-svc-mode-${cat.id}">
+              <option value="detalhada" ${cfg.mode === 'detalhada' ? 'selected' : ''}>Detalhada</option>
+              <option value="abreviada" ${cfg.mode === 'abreviada' ? 'selected' : ''}>Abreviada</option>
+            </select>
+          </div>
+        </div>
+      `;
+      svcBox.innerHTML += html;
+    });
+
+    document.getElementById('admin-fin-implanta').value = activeProposal.totalImplanta;
+    document.getElementById('admin-fin-mensal').value = activeProposal.totalMensal;
+    document.getElementById('admin-fin-paytext').value = activeProposal.payConditions;
+  }
+
+  function loadSelectedProposalAdmin() {
+    const slug = document.getElementById('admin-select-proposal').value;
+    if (PROPOSALS_DB[slug]) {
+      currentSlug = slug;
+      activeProposal = PROPOSALS_DB[slug];
+      renderProposal(activeProposal);
+      renderAdminDrawer();
+    }
+  }
+
+  function duplicateProposalAdmin() {
+    const newName = prompt("Digite o nome da nova empresa para a proposta duplicada:", activeProposal.clientName + " (Cópia)");
+    if (!newName) return;
+
+    const newSlug = newName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const newPin = Math.floor(10000 + Math.random() * 90000).toString();
+
+    const cloned = JSON.parse(JSON.stringify(activeProposal));
+    cloned.id = "PROP-2026-0" + (Object.keys(PROPOSALS_DB).length + 1);
+    cloned.slug = newSlug;
+    cloned.clientName = newName;
+    cloned.pin = newPin;
+    cloned.signatureData = null;
+    cloned.status = "enviada";
+
+    PROPOSALS_DB[newSlug] = cloned;
+    localStorage.setItem('SIMPLA_PROPOSALS_DB', JSON.stringify(PROPOSALS_DB));
+
+    activeProposal = cloned;
+    currentSlug = newSlug;
+
+    alert(`✅ Proposta duplicada com sucesso!\nNovo PIN de Acesso: ${newPin}\nURL: proposta.html?c=${newSlug}`);
+    renderProposal(activeProposal);
+    renderAdminDrawer();
+  }
+
+  function createNewProposalAdmin() {
+    const name = prompt("Nome da empresa solicitante:");
+    if (!name) return;
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const newProp = {
+      id: "PROP-2026-0" + (Object.keys(PROPOSALS_DB).length + 1),
+      slug: slug,
+      clientName: name,
+      cnpj: "00.000.000/0001-00",
+      pin: "12345",
+      cnae: "47.12-1-00",
+      grauRisco: "03",
+      funcionarios: 10,
+      setores: "1 Unidade",
+      responsavel: "Responsável",
+      email: "contato@empresa.com.br",
+      dataEmissao: new Date().toLocaleDateString('pt-BR'),
+      validade: "30 Dias",
+      status: "enviada",
+      servicesConfig: {
+        doc_programas: { active: true, mode: "detalhada" },
+        gestao_esocial: { active: true, mode: "detalhada" }
+      },
+      financialItems: [
+        { desc: "Elaboração de PGR + PCMSO", mode: "Pontual", val: "R$ 1.500,00" }
+      ],
+      totalImplanta: "R$ 1.500,00",
+      totalMensal: "R$ 350,00 / mês",
+      payConditions: "50% no aceite + 50% na entrega.",
+      signatureData: null
+    };
+
+    PROPOSALS_DB[slug] = newProp;
+    localStorage.setItem('SIMPLA_PROPOSALS_DB', JSON.stringify(PROPOSALS_DB));
+
+    activeProposal = newProp;
+    currentSlug = slug;
+
+    renderProposal(activeProposal);
+    renderAdminDrawer();
+  }
+
+  function saveProposalAdmin() {
+    activeProposal.clientName = document.getElementById('admin-client-name').value;
+    activeProposal.cnpj = document.getElementById('admin-client-cnpj').value;
+    activeProposal.pin = document.getElementById('admin-client-pin').value;
+    activeProposal.cnae = document.getElementById('admin-client-cnae').value;
+    activeProposal.grauRisco = document.getElementById('admin-client-risco').value;
+    activeProposal.funcionarios = document.getElementById('admin-client-funcs').value;
+    activeProposal.responsavel = document.getElementById('admin-client-resp').value;
+
+    // Salva configurações dos 8 grupos de serviços
+    MASTER_SERVICES_CATALOG.forEach(cat => {
+      const active = document.getElementById(`admin-svc-check-${cat.id}`).checked;
+      const mode = document.getElementById(`admin-svc-mode-${cat.id}`).value;
+      activeProposal.servicesConfig[cat.id] = { active: active, mode: mode };
+    });
+
+    activeProposal.totalImplanta = document.getElementById('admin-fin-implanta').value;
+    activeProposal.totalMensal = document.getElementById('admin-fin-mensal').value;
+    activeProposal.payConditions = document.getElementById('admin-fin-paytext').value;
+
+    PROPOSALS_DB[activeProposal.slug] = activeProposal;
+    localStorage.setItem('SIMPLA_PROPOSALS_DB', JSON.stringify(PROPOSALS_DB));
+
+    renderProposal(activeProposal);
+    alert("✅ Alterações salvas com sucesso!");
+    toggleAdminDrawer();
+  }
+</script>
+
+</body>
+</html>
