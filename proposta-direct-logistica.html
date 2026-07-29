@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proposta Técnica Comercial — DIRECT TRANSPORTE | Simpla SST</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  :root{
+    --ink:#052137;--ink-900:#031622;
+    --green:#44741B;--green-600:#5A9525;--green-50:#EDF5E4;
+    --client:#E98C00;--client-600:#D17D00;--client-50:#FFF5E0;--client-900:#B36B00;
+    --paper:#F4F7FA;--line:#E4EAF1;--text:#2C3A52;--muted:#5C6B82
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;color:var(--text);background:#fff;font-size:9.5pt;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  a{color:inherit;text-decoration:none}
+
+  .print-btn{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(68,116,27,.35);display:flex;align-items:center;gap:9px;transition:background .2s,transform .15s}
+  .print-btn:hover{background:var(--green-600);transform:translateY(-2px)}
+
+  .page{width:210mm;height:297mm;max-height:297mm;margin:0 auto;padding:12mm 14mm;page-break-after:always;page-break-inside:avoid;break-after:page;break-inside:avoid;position:relative;overflow:hidden;background:#fff;box-sizing:border-box}
+  .page:last-of-type{page-break-after:auto;break-after:auto}
+
+  @media screen{
+    body{background:#CBD5E1}
+    .page{margin:24px auto;box-shadow:0 8px 40px rgba(0,0,0,.18);border-radius:4px;height:auto;min-height:297mm;max-height:none}
+  }
+
+  @media print{
+    .print-btn, #loading-overlay, #password-gate, #sign-modal, .btn-assinar{display:none !important}
+    @page{size:A4;margin:0}
+    body{background:#fff;padding:0;margin:0}
+    .page{width:210mm !important;height:297mm !important;max-height:297mm !important;margin:0 !important;padding:10mm 14mm !important;page-break-after:always !important;page-break-inside:avoid !important;break-after:page !important;break-inside:avoid !important;box-sizing:border-box !important;overflow:hidden !important;position:relative !important;box-shadow:none !important;border-radius:0 !important}
+    .page-footer{position:absolute !important;bottom:8mm !important;left:14mm !important;right:14mm !important}
+    #proposal-content{display:block !important}
+  }
+
+  .eyebrow{font-size:7pt;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .eyebrow::before{content:'';width:22px;height:2px;background:var(--green);border-radius:2px;flex:none}
+  .eyebrow.client{color:var(--client)}
+  .eyebrow.client::before{background:var(--client)}
+
+  /* CAPA */
+  .cover{background:#fff;display:flex;flex-direction:column;justify-content:space-between}
+  .cover>*{position:relative}
+  .cover-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid var(--line);margin-bottom:18px}
+  .cover-brand{display:flex;align-items:center;gap:12px}
+  .cover-brand-text{display:flex;flex-direction:column;gap:4px}
+  .cover-brand-text span{font-size:7.5pt;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .cover-mid{text-align:center;padding:0 4mm}
+  .cover-badge{display:inline-flex;align-items:center;gap:9px;background:var(--client-50);border:1px solid rgba(233,140,0,.25);border-radius:999px;padding:6px 16px;margin-bottom:18px;font-size:8pt;font-weight:700;color:var(--client-900)}
+  .cover-badge svg{width:14px;height:14px;color:var(--client);flex:none}
+  .cover-mid h1{font-size:24pt;font-weight:800;color:var(--ink);line-height:1.1;letter-spacing:-.03em;margin-bottom:12px}
+  .cover-mid h1 .hl{color:var(--client)}
+  .cover-mid p{font-size:10pt;color:var(--muted);max-width:48ch;margin:0 auto;line-height:1.6}
+  .cover-divider{width:60px;height:3px;background:linear-gradient(90deg,var(--client),var(--green));border-radius:2px;margin:22px auto 18px}
+  .cover-info-list{list-style:none;max-width:420px;margin:0 auto;text-align:left;display:flex;flex-direction:column;gap:8px;counter-reset:info-counter}
+  .cover-info-list li{display:flex;align-items:baseline;gap:12px;font-size:9pt;line-height:1.4;color:var(--text);counter-increment:info-counter;padding:6px 0;border-bottom:1px solid var(--line)}
+  .cover-info-list li:last-child{border-bottom:none}
+  .cover-info-list li::before{content:counter(info-counter, decimal-leading-zero);font-size:8pt;font-weight:800;color:var(--client);flex:none;width:20px}
+  .cover-info-list li strong{color:var(--ink);font-weight:800}
+  .cover-info-list li span{color:var(--muted);font-weight:500}
+  .cover-footer-info{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding-top:16px;border-top:2px solid var(--line)}
+  .cover-footer-chip{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 14px;color:var(--ink);font-weight:600;font-size:8pt}
+  .cover-footer-chip svg{width:15px;height:15px;color:var(--green);flex:none}
+  .cover-footer-chip small{display:block;font-size:6.5pt;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px}
+
+  /* HEADER PÁGINAS INTERNAS */
+  .page-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--line);margin-bottom:16px}
+  .page-header-brand{display:flex;align-items:center;gap:10px}
+  .page-header-tag{font-size:7pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .section-title{font-size:15pt;font-weight:800;color:var(--ink);line-height:1.1;letter-spacing:-.02em;margin-bottom:6px}
+  .section-lead{font-size:9pt;color:var(--muted);margin-bottom:14px;max-width:68ch;line-height:1.6}
+
+  /* Serviços grid */
+  .svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  .svc{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:11px 13px;display:flex;gap:11px;align-items:flex-start}
+  .svc-ico{width:32px;height:32px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;flex:none}
+  .svc-ico svg{width:17px;height:17px;color:#fff}
+  .svc h3{font-size:8.5pt;font-weight:800;color:var(--ink);margin-bottom:3px}
+  .svc p{font-size:7.5pt;color:var(--muted);line-height:1.45}
+
+  /* Colunas */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .nr-tag{display:inline-flex;align-items:center;gap:7px;background:var(--green-50);color:var(--green);font-weight:800;font-size:7pt;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+  .nr-tag svg{width:12px;height:12px}
+  .nr-tag.client{background:var(--client-50);color:var(--client-900)}
+  .block-title{font-size:12pt;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;margin-bottom:6px}
+  .block-lead{font-size:8pt;color:var(--muted);line-height:1.55;margin-bottom:10px}
+
+  /* Painel escuro */
+  .dark-panel{background:var(--ink);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;margin-bottom:12px}
+  .dark-panel::after{content:'';position:absolute;bottom:-30px;right:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(233,140,0,.3),transparent 70%)}
+  .dark-panel h4{color:rgba(255,255,255,.6);font-size:7pt;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin-bottom:10px}
+  .panel-row{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1}
+  .panel-row:first-of-type{border-top:none}
+  .panel-row svg{width:15px;height:15px;color:var(--client);flex:none;margin-top:2px}
+  .panel-row .pt{font-weight:700;color:#fff;font-size:8pt}
+  .panel-row .pd{font-size:7.5pt;color:#B9C4D6;margin-top:1px}
+  .panel-row .ptxt{display:flex;flex-direction:column}
+
+  /* Alert box */
+  .alert-box{background:var(--ink-900);border-radius:10px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+  .alert-badge{display:inline-flex;align-items:center;gap:6px;background:var(--client-50);color:var(--client-900);font-weight:800;font-size:7pt;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;flex:none;white-space:nowrap}
+  .alert-badge svg{width:12px;height:12px}
+  .alert-box p{font-size:8pt;color:#DCE4F0;line-height:1.55}
+  .alert-box b{color:#fff}
+
+  /* Etapas psicossociais */
+  .etapa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .etapa{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+  .etapa::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--client),var(--green))}
+  .etapa-num{font-size:7pt;font-weight:800;color:var(--client);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+  .etapa h3{font-size:8.5pt;font-weight:800;color:var(--ink);margin-bottom:4px}
+  .etapa p{font-size:7.5pt;color:var(--muted);line-height:1.45}
+  .etapa ul{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:4px}
+  .etapa ul li{font-size:7pt;color:var(--muted);display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+  .etapa ul li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--client);flex:none;margin-top:4px}
+
+  /* Investimento */
+  .invest-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .invest-card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+  .invest-card.featured{background:var(--ink-900);border-color:var(--client)}
+  .invest-card.featured::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% 10%,rgba(233,140,0,.2),transparent 50%);pointer-events:none}
+  .invest-card.featured *{position:relative}
+  .invest-card .label{font-size:7pt;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+  .invest-card:not(.featured) .label{color:var(--muted)}
+  .invest-card.featured .label{color:var(--client)}
+  .invest-card .price{font-size:16pt;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+  .invest-card:not(.featured) .price{color:var(--ink)}
+  .invest-card.featured .price{color:#fff}
+  .invest-card .desc{font-size:7.5pt;line-height:1.45}
+  .invest-card:not(.featured) .desc{color:var(--muted)}
+  .invest-card.featured .desc{color:rgba(255,255,255,.6)}
+  .invest-items{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+  .invest-items li{list-style:none;display:flex;gap:7px;align-items:flex-start;font-size:7.5pt}
+  .invest-items li svg{width:12px;height:12px;flex:none;margin-top:1px}
+  .invest-card:not(.featured) .invest-items li svg{color:var(--green)}
+  .invest-card.featured .invest-items li svg{color:var(--client)}
+  .invest-card:not(.featured) .invest-items li{color:var(--text)}
+  .invest-card.featured .invest-items li{color:rgba(255,255,255,.75)}
+
+  /* Não escopo */
+  .nao-escopo{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+  .nao-item{display:flex;gap:8px;align-items:flex-start;padding:8px 11px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:7.5pt;color:var(--muted);line-height:1.45}
+  .nao-item svg{width:13px;height:13px;color:#B22B2B;flex:none;margin-top:1px}
+  .nao-item b{color:var(--ink)}
+
+  /* Rodapé */
+  .page-footer{position:absolute;bottom:8mm;left:14mm;right:14mm;display:flex;justify-content:space-between;align-items:center;font-size:7pt;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+  .page-footer a{color:var(--green);font-weight:600}
+
+  /* Dados pagamento */
+  .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .pay-card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .pay-card h4{font-size:7pt;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .pay-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line);font-size:7.5pt}
+  .pay-row:last-child{border-bottom:none}
+  .pay-row span:first-child{color:var(--muted);font-weight:600}
+  .pay-row span:last-child{color:var(--ink);font-weight:700}
+
+  /* Equipe */
+  .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .team-card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}
+  .team-ico{width:34px;height:34px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+  .team-ico svg{width:17px;height:17px;color:var(--client)}
+  .team-card h3{font-size:8pt;font-weight:800;color:var(--ink);line-height:1.2}
+
+  /* Responsabilidades */
+  .resp-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .resp-item{display:flex;gap:8px;align-items:flex-start;padding:9px 13px;background:var(--paper);border:1px solid var(--line);border-radius:8px;font-size:8pt;line-height:1.45}
+  .resp-item svg{width:14px;height:14px;flex:none;margin-top:2px;color:var(--client)}
+  .resp-item b{color:var(--ink)}
+
+  /* Validade */
+  .validity-banner{background:linear-gradient(135deg,var(--client),var(--client-600));border-radius:8px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .validity-banner span{color:#fff;font-weight:700;font-size:8.5pt}
+  .validity-banner strong{color:#fff;font-size:10.5pt;font-weight:800}
+
+  /* LOADING OVERLAY */
+  #loading-overlay {
+    position: fixed; inset: 0; background: #fff; z-index: 99999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: fadeOutLoading 0.4s ease forwards;
+    animation-delay: 1.8s;
+  }
+  @keyframes fadeOutLoading {
+    to { opacity: 0; visibility: hidden; }
+  }
+  .loading-logo { max-height: 80px; margin-bottom: 20px; }
+  .loading-bar { width: 150px; height: 4px; background: #F4F7FA; border-radius: 4px; overflow: hidden; }
+  .loading-progress { width: 0%; height: 100%; background: #E98C00; animation: loadingAnim 1.5s ease forwards; }
+  @keyframes loadingAnim {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+
+  /* PASSWORD GATE */
+  #password-gate {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+  }
+  .pass-modal {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%;
+  }
+  .pass-modal img { height: 40px; margin-bottom: 16px; }
+  .pass-modal h2 { font-size: 16pt; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+  .pass-modal p { font-size: 9.5pt; color: var(--muted); margin-bottom: 20px; }
+  .pass-input {
+    width: 100%; padding: 12px 16px; border: 2px solid var(--line); border-radius: 8px;
+    font-size: 12pt; text-align: center; margin-bottom: 12px; outline: none; transition: border-color 0.2s;
+  }
+  .pass-input:focus { border-color: var(--green); }
+  .pass-btn {
+    width: 100%; background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 8px;
+    font-weight: 700; font-size: 10pt; cursor: pointer; transition: background 0.2s;
+  }
+  .pass-btn:hover { background: var(--green-600); }
+  .pass-error { color: #B22B2B; font-size: 8.5pt; font-weight: 600; margin-top: 10px; display: none; }
+
+  /* DIGITAL SIGNATURE MODAL */
+  #sign-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999;
+    display: none; align-items: center; justify-content: center;
+  }
+  .sign-content {
+    background: #fff; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .sign-header { background: var(--green); padding: 16px 24px; color: #fff; }
+  .sign-header h3 { font-size: 12pt; font-weight: 800; margin: 0; }
+  .sign-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .sign-field { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+  .sign-field label { font-size: 7.5pt; font-weight: 700; color: var(--ink); text-transform: uppercase; }
+  .sign-field input {
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 9.5pt;
+    font-family: inherit; outline: none; transition: border-color 0.2s;
+  }
+  .sign-field input:focus { border-color: var(--green); }
+  .sign-check { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+  .sign-check input { margin-top: 2px; }
+  .sign-check label { font-size: 7.5pt; color: var(--muted); line-height: 1.4; font-weight: 400; text-transform: none; }
+  .sign-footer { padding: 14px 24px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 12px; align-items: center; background: var(--paper); }
+  .sign-cancel { color: var(--muted); font-size: 8.5pt; font-weight: 600; cursor: pointer; border: none; background: transparent; }
+  .sign-submit { background: var(--green); color: #fff; border: none; padding: 9px 18px; border-radius: 6px; font-weight: 700; font-size: 9pt; cursor: pointer; }
+  
+  /* CERTIFICATE */
+  #cert-box {
+    margin-top: 12px; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--green);
+    border-radius: 8px; padding: 12px 16px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .cert-badge {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--green-50); color: var(--green);
+    font-weight: 800; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+  }
+  .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .cert-item { display: flex; flex-direction: column; }
+  .cert-item small { font-size: 6.5pt; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 1px; }
+  .cert-item span { font-size: 8pt; color: var(--ink); font-weight: 500; word-break: break-all; }
+  .cert-footer { font-size: 7pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <img src="logo_direct_logstica_e_transporte.png" alt="Logo Cliente" class="loading-logo">
+  <div class="loading-bar"><div class="loading-progress"></div></div>
+</div>
+
+<div id="password-gate">
+  <div class="pass-modal">
+    <img src="logo-simpla.svg" alt="Simpla SST">
+    <h2>Acesso Restrito</h2>
+    <p>Esta proposta é confidencial. Insira a senha de acesso.</p>
+    <input type="password" id="pass-input" class="pass-input" placeholder="Senha">
+    <button type="button" id="pass-btn" class="pass-btn">Acessar Documento</button>
+    <div id="pass-error" class="pass-error">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<div id="proposal-content" style="display:none;">
+
+<button class="print-btn" onclick="window.print()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+  Salvar como PDF
+</button>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chk" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="wa" viewBox="0 0 32 32"><path fill="currentColor" d="M19.11 17.205c-.372 0-1.088 1.39-1.518 1.39a.63.63 0 0 1-.315-.1c-.802-.402-1.504-.817-2.163-1.447-.545-.516-1.146-1.29-1.46-1.963a.426.426 0 0 1-.073-.215c0-.33.99-.945.99-1.49 0-.143-.73-2.09-.832-2.335-.143-.372-.214-.487-.6-.487-.187 0-.36-.043-.53-.043-.302 0-.53.115-.746.315-.688.645-1.03 1.318-1.045 2.264v.114c-.015.99.472 1.977 1.017 2.78 1.23 1.82 2.506 3.41 4.554 4.34.616.287 2.035.888 2.722.888.817 0 2.15-.515 2.478-1.318.13-.33.244-.674.244-1.036 0-.114-.03-.215-.058-.33-.101-.114-1.777-.888-2.435-.888zm-3.567 8.05h-.014a10.163 10.163 0 0 1-5.155-1.412l-.37-.22-3.826 1.003 1.024-3.73-.242-.386a10.113 10.113 0 0 1-1.55-5.4c.004-5.594 4.556-10.145 10.156-10.145a10.075 10.075 0 0 1 7.176 2.977 10.083 10.083 0 0 1 2.973 7.179c-.002 5.594-4.555 10.144-10.15 10.144zm8.633-18.788C21.87 3.86 18.842 2.5 15.7 2.5 9.163 2.5 3.842 7.822 3.84 14.36c0 2.09.545 4.131 1.58 5.93L3.75 26.4l6.253-1.64a12.245 12.245 0 0 0 5.85 1.49h.005c6.5 0 12.098-5.323 12.101-11.86a12.14 12.14 0 0 0-3.532-8.579z"/></symbol>
+  <symbol id="ml" viewBox="0 0 24 24"><rect fill="none" stroke="currentColor" stroke-width="2" x="3" y="5" width="18" height="14" rx="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="gb" viewBox="0 0 24 24"><circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="10"/><path fill="none" stroke="currentColor" stroke-width="2" d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="x-circle" viewBox="0 0 24 24"><circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="10"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m15 9-6 6M9 9l6 6"/></symbol>
+</svg>
+
+<!-- PÁGINA 1 — CAPA -->
+<div class="page cover">
+  <div class="cover-top">
+    <div class="cover-brand">
+      <img src="logo-simpla.svg" alt="Simpla SST" style="width:46px;height:54px;flex:none;">
+      <div class="cover-brand-text">
+        <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:22px;width:auto;">
+        <span>Saúde e Segurança do Trabalho</span>
+      </div>
+    </div>
+    <img src="logo_direct_logstica_e_transporte.png" alt="Direct Logística e Transporte" style="height:55px;width:auto;">
+  </div>
+
+  <div class="cover-mid">
+    <div class="cover-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+      Proposta Técnica Comercial
+    </div>
+    <h1><span class="hl">Proposta Técnica Comercial</span><br>para Prestação de Serviços<br>em SST</h1>
+    <p>Soluções completas em Segurança e Saúde do Trabalho, incluindo Gerenciamento de Riscos Psicossociais conforme NR-01, para a DIRECT TRANSPORTE, ARMAZENS E LOGISTICA LTDA.</p>
+
+    <div class="cover-divider"></div>
+
+    <ol class="cover-info-list">
+      <li><span>Empresa Solicitante:</span> <strong>DIRECT TRANSPORTE, ARMAZENS E LOGISTICA LTDA</strong></li>
+      <li><span>CNPJ:</span> <strong>59.258.530/0001-87</strong></li>
+      <li><span>CNAE:</span> <strong>52.11-7/01</strong> — <span>Armazéns gerais</span></li>
+      <li><span>Grau de Risco:</span> <strong>3</strong></li>
+      <li><span>Número de funcionários:</span> <strong>100 funcionários (aprox.)</strong></li>
+    </ol>
+  </div>
+
+  <div class="cover-footer-info">
+    <a class="cover-footer-chip" href="https://wa.me/5521995286353" target="_blank">
+      <svg viewBox="0 0 32 32" width="16" height="16"><use href="#wa"/></svg>
+      <span><small>WhatsApp</small>(21) 99528-6353</span>
+    </a>
+    <a class="cover-footer-chip" href="mailto:comercial@simplasst.com.br">
+      <svg viewBox="0 0 24 24" width="16" height="16"><use href="#ml"/></svg>
+      <span><small>E-mail</small>comercial@simplasst.com.br</span>
+    </a>
+    <div class="cover-footer-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span><small>Data</small>Rio de Janeiro, 28 de Julho de 2026</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- PÁGINA 2 — ESCOPO SST GERAL -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">
+      <img src="logo-simpla.svg" alt="" style="height:26px;width:auto;">
+      <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:15px;width:auto;">
+    </div>
+    <span class="page-header-tag">Proposta · DIRECT TRANSPORTE</span>
+  </div>
+
+  <div class="eyebrow">Escopo dos serviços</div>
+  <h2 class="section-title">Serviços contemplados nesta proposta.</h2>
+  <p class="section-lead">Soluções integradas em Segurança e Saúde do Trabalho para atendimento à legislação vigente, adequação às Normas Regulamentadoras e gestão do eSocial.</p>
+
+  <div class="svc-grid">
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div>
+      <div><h3>Visita técnica inicial</h3><p>Levantamento de dados, reconhecimento dos ambientes de trabalho e identificação dos riscos ocupacionais.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
+      <div><h3>Elaboração/Atualização do GRO/PGR</h3><p>Gerenciamento de Riscos Ocupacionais e Programa de Gerenciamento de Riscos, em conformidade com a legislação vigente.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <div><h3>Elaboração/Atualização do PCMSO</h3><p>Programa de Controle Médico de Saúde Ocupacional conforme os requisitos da NR-7.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6"/><rect x="4" y="3" width="16" height="18" rx="2"/></svg></div>
+      <div><h3>Elaboração/Atualização do LTCAT</h3><p>Laudo Técnico das Condições Ambientais do Trabalho em conformidade com a legislação vigente.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m9 16 2 2 4-4"/></svg></div>
+      <div><h3>Gestão e envio do eSocial (SST)</h3><p>Eventos S-2210, S-2220 e S-2240 pelo período de 12 meses, mediante fornecimento das informações pela contratante.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></div>
+      <div><h3>Visitas técnicas mensais</h3><p>Acompanhamento das condições de segurança e saúde ocupacional, orientação e suporte técnico contínuo.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div><h3>Riscos psicossociais (NR-1)</h3><p>Levantamento automatizado dos riscos psicossociais conforme as diretrizes da NR-1, com material educativo de conscientização.</p></div>
+    </div>
+    <div class="svc">
+      <div class="svc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg></div>
+      <div><h3>Análise Ergonômica Preliminar (AEP)</h3><p>Conforme os requisitos da NR-17, com identificação dos fatores de risco ergonômicos e recomendações de melhoria.</p></div>
+    </div>
+  </div>
+
+  <div class="page-footer"><span>Simpla SST · Proposta Comercial — DIRECT TRANSPORTE</span><span>Página 2</span></div>
+</div>
+
+
+<!-- PÁGINA 3 — RISCOS PSICOSSOCIAIS -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">
+      <img src="logo-simpla.svg" alt="" style="height:26px;width:auto;">
+      <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:15px;width:auto;">
+    </div>
+    <span class="page-header-tag">Riscos Psicossociais · NR-01</span>
+  </div>
+
+  <div class="eyebrow client">Gerenciamento dos riscos psicossociais</div>
+  <h2 class="section-title">Identificação, avaliação e gestão dos riscos psicossociais integrados ao PGR.</h2>
+  <p class="section-lead">Conforme determina a NR-01 (item 1.5.3) e considerando os fatores relacionados à organização do trabalho previstos na NR-17 (item 17.3.1). A metodologia aplicada permite uma análise estruturada da realidade organizacional, respeitando a complexidade dos setores.</p>
+
+  <div class="etapa-grid">
+    <div class="etapa">
+      <div class="etapa-num">Etapa 01</div>
+      <h3>Preparação e Alinhamento Estratégico</h3>
+      <p>Estruturação da base técnica e organizacional para implementação consistente.</p>
+      <ul>
+        <li>Levantamento com RH e SESMT (estrutura, políticas, histórico)</li>
+        <li>Análise crítica de documentos existentes (PGR, AEP/AET)</li>
+        <li>Alinhamento com consultorias externas envolvidas</li>
+        <li>Estratégia de comunicação com lideranças</li>
+        <li>Planejamento logístico de campo</li>
+        <li>Metodologia adaptada ao público operacional</li>
+      </ul>
+    </div>
+    <div class="etapa">
+      <div class="etapa-num">Etapa 02</div>
+      <h3>Engajamento, Sensibilização e Diagnóstico</h3>
+      <p>Adesão, qualidade da informação e leitura fiel da realidade operacional.</p>
+      <ul>
+        <li>Plataforma para implementação dos Riscos Psicossociais</li>
+        <li>Capacitação aplicada em DDS</li>
+        <li>Comunicação clara aos colaboradores</li>
+        <li>Aplicação assistida do diagnóstico</li>
+        <li>Atuação presencial em campo</li>
+        <li>Diagnóstico qualitativo com lideranças</li>
+        <li>Organização da aplicação por turnos</li>
+      </ul>
+    </div>
+    <div class="etapa">
+      <div class="etapa-num">Etapa 03</div>
+      <h3>Consolidação, Análise e Entrega Técnica</h3>
+      <p>Transformação dos dados em inteligência estratégica e direcionamento prático.</p>
+      <ul>
+        <li>Consolidação de dados quantitativos e qualitativos</li>
+        <li>Matriz de inventário por criticidade, frequência e impacto</li>
+        <li>Pareceres técnicos e laudos (NR-01)</li>
+        <li>Reunião técnica com SESMT</li>
+        <li>Plano de ação conjunto com RH e SESMT</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="dark-panel">
+    <h4>Plataforma on-line para avaliação dos riscos psicossociais</h4>
+    <div class="panel-row"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><div class="ptxt"><span class="pt">Cadastro da empresa, unidades, setores e colaboradores</span><span class="pd">Organização completa por unidade, setor e grupo de exposição.</span></div></div>
+    <div class="panel-row"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><div class="ptxt"><span class="pt">Aplicação eletrônica dos questionários de avaliação</span><span class="pd">Acompanhamento da taxa de participação em tempo real.</span></div></div>
+    <div class="panel-row"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><div class="ptxt"><span class="pt">Relatórios gerenciais e indicadores</span><span class="pd">Emissão de relatórios para identificação, avaliação e gerenciamento dos riscos, com integração ao PGR.</span></div></div>
+    <div class="panel-row"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><div class="ptxt"><span class="pt">Armazenamento seguro e confidencial</span><span class="pd">Dados coletados com observância da confidencialidade e LGPD.</span></div></div>
+  </div>
+
+  <div class="alert-box">
+    <div class="alert-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Entregas</div>
+    <p>Diagnóstico completo da realidade psicossocial · <b>Engajamento estruturado de lideranças e colaboradores</b> · Base técnica aderente à NR-01 · <b>Mapeamento priorizado dos riscos</b> · Dados transformados em inteligência estratégica · <b>Plano de ação prático e alinhado à operação</b> · Fortalecimento da cultura de segurança e saúde ocupacional.</p>
+  </div>
+
+  <div class="page-footer"><span>Simpla SST · Proposta Comercial — DIRECT TRANSPORTE</span><span>Página 3</span></div>
+</div>
+
+
+<!-- PÁGINA 4 — NÃO ESCOPO -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">
+      <img src="logo-simpla.svg" alt="" style="height:26px;width:auto;">
+      <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:15px;width:auto;">
+    </div>
+    <span class="page-header-tag">Não Escopo · Exclusões</span>
+  </div>
+
+  <div class="eyebrow">Não escopo — SST Geral</div>
+  <h2 class="section-title">Serviços não contemplados nesta proposta.</h2>
+  <p class="section-lead">Os serviços abaixo não fazem parte do escopo, salvo quando expressamente contratados por meio de aditivo ou proposta complementar.</p>
+
+  <div class="nao-escopo">
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Exames médicos ocupacionais (ASOs)</b> — Admissional, periódico, demissional, retorno ao trabalho e mudança de função. Exames direcionados para clínica parceira com intermediação da Simpla SST.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Treinamentos presenciais (NRs)</b> — Treinamentos previstos nas Normas Regulamentadoras aplicáveis ao segmento de atuação da empresa, exceto quando contratados por proposta específica.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Atendimento clínico ou terapêutico</b> — Atendimento psicológico, psicoterapia, acompanhamento clínico individual ou qualquer intervenção assistencial aos colaboradores.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Outros documentos legais de SST</b> — Elaboração ou revisão integral de documentos como PPP, Laudos de Insalubridade e Periculosidade, exceto previstos nesta proposta.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Implementação das ações recomendadas</b> — Adequações estruturais, reorganização de processos, implantação de programas ou canais internos são de responsabilidade da contratante.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Investigação de casos individuais</b> — Investigação formal de denúncias de assédio moral, sexual, conflitos interpessoais, processos disciplinares ou casos individualizados.</span></div>
+    <div class="nao-item" style="grid-column: 1 / -1;"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Avaliações ergonômicas detalhadas</b> — Elaboração de Análise Ergonômica do Trabalho (AET) completa ou avaliações de mobiliário, layout, iluminação, ruído, biomecânica e postura.</span></div>
+  </div>
+
+  <div class="eyebrow" style="margin-top: 10px;">Não escopo — Riscos Psicossociais</div>
+  <p class="section-lead" style="margin-bottom:10px;">Exclusões específicas do módulo de gerenciamento dos riscos psicossociais.</p>
+
+  <div class="nao-escopo">
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Garantia de resultados organizacionais</b> — A contratada não garante redução de absenteísmo, turnover, afastamentos ou acidentes, pois dependem da implementação efetiva pela contratante.</span></div>
+    <div class="nao-item"><svg viewBox="0 0 24 24"><use href="#x-circle"/></svg><span><b>Atividades presenciais extraordinárias</b> — Deslocamentos adicionais, visitas técnicas extraordinárias ou entrevistas presenciais extras fora do cronograma acordado.</span></div>
+  </div>
+
+  <div class="page-footer"><span>Simpla SST · Proposta Comercial — DIRECT TRANSPORTE</span><span>Página 4</span></div>
+</div>
+
+
+<!-- PÁGINA 5 — EQUIPE, PRAZO, INVESTIMENTO -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">
+      <img src="logo-simpla.svg" alt="" style="height:26px;width:auto;">
+      <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:15px;width:auto;">
+    </div>
+    <span class="page-header-tag">Equipe · Prazos · Investimento</span>
+  </div>
+
+  <!-- Equipe -->
+  <div class="eyebrow">Equipe técnica responsável</div>
+  <h2 class="section-title" style="margin-bottom:10px;">Equipe multidisciplinar legalmente habilitada.</h2>
+
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div>
+      <h3>Engenheiro de Segurança do Trabalho</h3>
+    </div>
+    <div class="team-card">
+      <div class="team-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg></div>
+      <h3>Psicólogo Organizacional</h3>
+    </div>
+    <div class="team-card">
+      <div class="team-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>
+      <h3>Técnica de Segurança do Trabalho</h3>
+    </div>
+    <div class="team-card">
+      <div class="team-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <h3>Médico do Trabalho</h3>
+    </div>
+  </div>
+
+  <!-- Prazos -->
+  <div class="eyebrow client">Prazos de execução</div>
+  <div style="margin-bottom:12px;">
+    <h3 class="block-title" style="font-size:11pt;">Entrega em até 30 dias</h3>
+    <p class="block-lead" style="margin-bottom:8px;">A entrega dos documentos far-se-á 30 dias após a visita técnica, mediante contrato assinado.</p>
+  </div>
+
+  <!-- Investimento -->
+  <div class="eyebrow client">Investimento e condições de pagamento</div>
+  <h2 class="section-title" style="margin-bottom:10px;">Investimento dimensionado para a sua operação.</h2>
+
+  <div class="invest-grid">
+    <div class="invest-card featured">
+      <div class="label">ASSESSORIA MENSAL</div>
+      <div class="price">R$ 2.604,00</div>
+      <div class="desc">Valor total dos serviços de SST</div>
+      <ul class="invest-items">
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Visita técnica inicial</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Elaboração/Atualização do PCMSO</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Elaboração/Atualização do GRO/PGR</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Elaboração/Atualização do LTCAT</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Consultoria mensal</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Riscos psicossociais dentro do PGR</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Materiais Educativos (Ergonomia / Psicossociais)</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Envio dos eventos SST no eSocial por 1 ano</li>
+      </ul>
+    </div>
+    <div class="invest-card featured">
+      <div class="label">Módulo Riscos Psicossociais</div>
+      <div class="price">R$ 78,00 <span style="font-size:9pt;font-weight:600;opacity:.7">/ por vida</span></div>
+      <div class="desc">Questionário na plataforma on-line para avaliação dos riscos psicossociais e relatório completo junto ao PGR</div>
+      <ul class="invest-items" style="margin-top:12px;">
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Profundidade do diagnóstico</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Grau de criticidade dos setores</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Aplicação censitária em áreas críticas</li>
+        <li><svg viewBox="0 0 24 24"><use href="#chk"/></svg>Segmentação por GHE</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pay-grid">
+    <div class="pay-card">
+      <h4>Forma de Pagamento — SST Geral</h4>
+      <div class="pay-row"><span>No aceite da proposta</span><span>50%</span></div>
+      <div class="pay-row"><span>Na entrega dos documentos</span><span>50%</span></div>
+      <div class="pay-row"><span>Forma</span><span>Boleto ou PIX</span></div>
+    </div>
+    <div class="pay-card">
+      <h4>Forma de Pagamento — Riscos Psicossociais</h4>
+      <div class="pay-row"><span>Na assinatura do contrato</span><span>1ª parcela</span></div>
+      <div class="pay-row"><span>Saldo remanescente</span><span>5 parcelas mensais</span></div>
+    </div>
+  </div>
+
+  <div class="page-footer"><span>Simpla SST · Proposta Comercial — DIRECT TRANSPORTE</span><span>Página 5</span></div>
+</div>
+
+
+<!-- PÁGINA 6 — DADOS, RESPONSABILIDADES, ACEITE -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">
+      <img src="logo-simpla.svg" alt="" style="height:26px;width:auto;">
+      <img src="text-simpla-sst.svg" alt="Simpla SST" style="height:15px;width:auto;">
+    </div>
+    <span class="page-header-tag">Dados · Responsabilidades · Aceite</span>
+  </div>
+
+  <!-- Dados para pagamento -->
+  <div class="eyebrow">Dados para pagamento</div>
+  <div class="dark-panel" style="margin-bottom:12px;">
+    <h4>Dados bancários — Simpla SST</h4>
+    <div class="panel-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><div class="ptxt"><span class="pt">SIMPLA SAUDE E SEGURANCA DO TRABALHO LTDA</span><span class="pd">CNPJ: 68.152.649/0001-61</span></div></div>
+    <div class="panel-row"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><div class="ptxt"><span class="pt">Agência: 0001 · Conta: 7468029-1</span><span class="pd">Instituição: 403 - Cora SCFI</span></div></div>
+    <div class="panel-row"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M11.917 11.71a2.046 2.046 0 0 1-1.454-.602l-2.1-2.1a.4.4 0 0 0-.551 0l-2.108 2.108a2.044 2.044 0 0 1-1.454.602h-.414l2.66 2.66c.83.83 2.177.83 3.007 0l2.667-2.668h-.253zM4.25 4.282c.55 0 1.066.214 1.454.602l2.108 2.108a.39.39 0 0 0 .552 0l2.1-2.1a2.044 2.044 0 0 1 1.453-.602h.253L9.503 1.623a2.127 2.127 0 0 0-3.007 0l-2.66 2.66h.414z"/><path d="m14.377 6.496-1.612-1.612a.307.307 0 0 1-.114.023h-.733c-.379 0-.75.154-1.017.422l-2.1 2.1a1.005 1.005 0 0 1-1.425 0L5.268 5.32a1.448 1.448 0 0 0-1.018-.422h-.9a.306.306 0 0 1-.109-.021L1.623 6.496c-.83.83-.83 2.177 0 3.008l1.618 1.618a.305.305 0 0 1 .108-.022h.901c.38 0 .75-.153 1.018-.421L7.375 8.57a1.034 1.034 0 0 1 1.426 0l2.1 2.1c.267.268.638.421 1.017.421h.733c.04 0 .079.01.114.024l1.612-1.612c.83-.83.83-2.178 0-3.008z"/></svg><div class="ptxt"><span class="pt">Chave PIX: 68152649000161</span><span class="pd">CNPJ como chave PIX</span></div></div>
+  </div>
+
+  <!-- Responsabilidades -->
+  <div class="eyebrow client">Responsabilidades da contratante</div>
+
+  <div class="resp-list">
+    <div class="resp-item"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><span>Fornecer <b>informações e documentos</b> necessários à execução dos serviços.</span></div>
+    <div class="resp-item"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><span>Disponibilizar <b>acesso às dependências</b> para realização dos levantamentos técnicos.</span></div>
+    <div class="resp-item"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><span>Disponibilizar <b>documentos, processos de trabalho, indicadores de SST</b> e dados operacionais.</span></div>
+    <div class="resp-item"><svg viewBox="0 0 24 24"><use href="#chk"/></svg><span>Indicar <b>representantes</b> para acompanhamento das atividades e validação das informações.</span></div>
+  </div>
+
+  <div class="alert-box" style="margin-bottom:10px;">
+    <div class="alert-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Importante</div>
+    <p>A qualidade das análises e dos documentos elaborados <b>dependerá da veracidade e integridade</b> das informações fornecidas pela contratante. Após a entrega, atualizações do PGR serão cobradas à parte (<b>R$ 110,00</b>).</p>
+  </div>
+
+  <!-- Validade -->
+  <div class="validity-banner">
+    <span>Validade desta proposta</span>
+    <strong>30 dias</strong>
+  </div>
+
+  <div style="text-align:center;padding:8px 14px;background:var(--green-50);border-radius:8px;margin-bottom:10px;">
+    <p style="font-size:8pt;color:var(--ink);font-style:italic;line-height:1.45;max-width:55ch;margin:0 auto;">"Mais do que atender às exigências da NR-1, esta proposta busca identificar e tratar os riscos psicossociais que impactam diretamente a saúde das pessoas e a sustentabilidade do negócio."</p>
+  </div>
+
+  <!-- Aceite -->
+  <div style="text-align: center; margin-top: 10px;">
+    <button type="button" id="btn-assinar" class="btn-assinar" style="background: var(--green); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; font-size: 10pt; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+      Aceitar e Assinar Proposta
+    </button>
+  </div>
+  
+  <div id="cert-box">
+    <div class="cert-badge">✓ Assinado Digitalmente</div>
+    <div class="cert-grid">
+      <div class="cert-item"><small>Nome</small><span id="cert-nome">-</span></div>
+      <div class="cert-item"><small>CPF</small><span id="cert-cpf">-</span></div>
+      <div class="cert-item"><small>E-mail</small><span id="cert-email">-</span></div>
+      <div class="cert-item"><small>Cargo</small><span id="cert-cargo">-</span></div>
+      <div class="cert-item"><small>Data e Hora</small><span id="cert-data">-</span></div>
+      <div class="cert-item"><small>IP do Signatário</small><span id="cert-ip">-</span></div>
+      <div class="cert-item" style="grid-column: 1 / -1;"><small>Hash SHA-256</small><span id="cert-hash" style="font-family: monospace; font-size: 7.5pt;">-</span></div>
+    </div>
+    <div class="cert-footer">Documento assinado eletronicamente conforme MP 2.200-2/2001 e Art. 10, §2º.</div>
+  </div>
+
+  <div class="page-footer"><span>Simpla SST · Proposta Comercial — DIRECT TRANSPORTE</span><span>Página 6</span></div>
+</div>
+
+</div>
+
+<!-- ASSINATURA MODAL HTML -->
+<div id="sign-modal">
+  <div class="sign-content">
+    <div class="sign-header">
+      <h3>Assinatura Eletrônica</h3>
+    </div>
+    <div class="sign-body">
+      <div class="sign-field">
+        <label>Nome Completo</label>
+        <input type="text" id="sign-nome" required>
+      </div>
+      <div class="sign-field">
+        <label>CPF</label>
+        <input type="text" id="sign-cpf" maxlength="14" required placeholder="000.000.000-00">
+      </div>
+      <div class="sign-field">
+        <label>E-mail</label>
+        <input type="email" id="sign-email" required>
+      </div>
+      <div class="sign-field">
+        <label>Telefone</label>
+        <input type="tel" id="sign-tel" required>
+      </div>
+      <div class="sign-field">
+        <label>Cargo na Empresa</label>
+        <input type="text" id="sign-cargo" required>
+      </div>
+      <div class="sign-check">
+        <input type="checkbox" id="sign-check" required>
+        <label for="sign-check">Declaro que li e aceito integralmente os termos desta proposta técnica comercial, em conformidade com a MP 2.200-2/2001.</label>
+      </div>
+    </div>
+    <div class="sign-footer">
+      <button class="sign-cancel" id="sign-cancel">Cancelar</button>
+      <button class="sign-submit" id="sign-submit">Assinar Proposta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Password Gate
+document.getElementById('pass-btn').addEventListener('click', function() {
+  const pw = document.getElementById('pass-input').value;
+  if(pw === '59258') {
+    document.getElementById('password-gate').style.display = 'none';
+    document.getElementById('proposal-content').style.display = 'block';
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+  }
+});
+
+document.getElementById('pass-input').addEventListener('keypress', function(e) {
+  if(e.key === 'Enter') {
+    document.getElementById('pass-btn').click();
+  }
+});
+
+// CPF Mask
+document.getElementById('sign-cpf').addEventListener('input', function(e) {
+  let v = e.target.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  e.target.value = v;
+});
+
+// Signature Modal
+document.getElementById('btn-assinar').addEventListener('click', function() {
+  document.getElementById('sign-modal').style.display = 'flex';
+});
+
+document.getElementById('sign-cancel').addEventListener('click', function() {
+  document.getElementById('sign-modal').style.display = 'none';
+});
+
+document.getElementById('sign-submit').addEventListener('click', async function() {
+  const nome = document.getElementById('sign-nome').value.trim();
+  const cpf = document.getElementById('sign-cpf').value.trim();
+  const email = document.getElementById('sign-email').value.trim();
+  const tel = document.getElementById('sign-tel').value.trim();
+  const cargo = document.getElementById('sign-cargo').value.trim();
+  const check = document.getElementById('sign-check').checked;
+
+  if(!nome || !cpf || !email || !tel || !cargo || !check) {
+    alert('Por favor, preencha todos os campos e aceite os termos.');
+    return;
+  }
+
+  // Hide modal
+  document.getElementById('sign-modal').style.display = 'none';
+
+  // Mask CPF for display: ***.123.456-**
+  const cpfClean = cpf.replace(/\D/g, '');
+  const cpfMasked = '***.' + cpfClean.slice(3,6) + '.' + cpfClean.slice(6,9) + '-**';
+
+  // Date formatted in UTC-3
+  const now = new Date();
+  const options = { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'medium' };
+  const dateStr = new Intl.DateTimeFormat('pt-BR', options).format(now) + ' (UTC-3)';
+
+  // Fetch IP
+  let ipStr = '179.248.171.179';
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    if(ipRes.ok) {
+      const ipData = await ipRes.json();
+      ipStr = ipData.ip;
+    }
+  } catch(e) {}
+
+  // Generate SHA-256 Hash
+  const hashData = `${nome}|${cpf}|${email}|${dateStr}|${ipStr}`;
+  const encoder = new TextEncoder();
+  const dataBuf = encoder.encode(hashData);
+  const hashBuf = await crypto.subtle.digest('SHA-256', dataBuf);
+  const hashArray = Array.from(new Uint8Array(hashBuf));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  // Populate Certificated
+  document.getElementById('cert-nome').innerText = nome;
+  document.getElementById('cert-cpf').innerText = cpfMasked;
+  document.getElementById('cert-email').innerText = email;
+  document.getElementById('cert-cargo').innerText = cargo;
+  document.getElementById('cert-data').innerText = dateStr;
+  document.getElementById('cert-ip').innerText = ipStr;
+  document.getElementById('cert-hash').innerText = hashHex;
+
+  // Show Certificate, hide Sign Button
+  document.getElementById('cert-box').style.display = 'block';
+  document.getElementById('btn-assinar').style.display = 'none';
+});
+</script>
+
+</body>
+</html>
